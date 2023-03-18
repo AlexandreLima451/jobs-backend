@@ -87,6 +87,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
 
         dto.getContacts().forEach(queryContactDto -> {
             Contact contactForProfessional = createContactForProfessional(professional, queryContactDto);
+            contactRepository.save(contactForProfessional);
             professionalCreated
                 .addContact(contactForProfessional);});
         return convertToQueryProfessionalDto(repository.save(professionalCreated));
@@ -97,7 +98,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
         contact.setName(queryContactDto.getName());
         contact.setContact(queryContactDto.getContact());
         contact.setProfessional(professional);
-        return contactRepository.save(contact);
+        return contact;
     }
 
     @Override
@@ -111,18 +112,20 @@ public class ProfessionalServiceImpl implements ProfessionalService {
         professional.setName(dto.getName());
         professional.setRole(dto.getRole());
         professional.setBirthday(dto.getBirthday());
-        dto.getContacts().forEach(queryContactDto -> {
+        for (QueryContactDto queryContactDto : dto.getContacts()) {
             Contact contact;
-            if(queryContactDto.getId() != null) {
+            if (queryContactDto.getId() != null) {
                 contact = convertDtoToContact(professional.getId(), queryContactDto);
             } else {
-                contact = createContactForProfessional(professional, queryContactDto);
+                continue;
             }
+            contactRepository.save(contact);
             professional.addContact(contact);
-        });
+        }
 
-        repository.save(professional);
-        return convertToQueryProfessionalDto(professional);
+        Professional professionalUpdated = repository.save(professional);
+
+        return convertToQueryProfessionalDto(professionalUpdated);
     }
 
     @Override
@@ -140,6 +143,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
 
     private Contact convertDtoToContact (Long professionalId, QueryContactDto dto) {
         Contact contact = new Contact();
+        contact.setId(dto.getId());
         contact.setName(dto.getName());
         contact.setContact(dto.getContact());
 
