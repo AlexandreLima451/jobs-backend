@@ -1,7 +1,16 @@
 package com.simplesdental.jobsbackend.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.ser.BeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.FilterProvider;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.simplesdental.jobsbackend.model.dto.ContactDto;
 import com.simplesdental.jobsbackend.model.dto.QueryContactDto;
+import com.simplesdental.jobsbackend.model.dto.QueryFilterDto;
 import com.simplesdental.jobsbackend.model.entity.Contact;
 import com.simplesdental.jobsbackend.model.entity.Professional;
 import com.simplesdental.jobsbackend.repository.ContactRepository;
@@ -10,9 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ContactServiceImpl implements ContactService {
@@ -24,24 +32,35 @@ public class ContactServiceImpl implements ContactService {
     private ProfessionalRepository professionalRepository;
 
     @Override
-    public List<QueryContactDto> getByQuery(String text) {
-        List<QueryContactDto> queryContactDtos = new ArrayList<>();
+    public List<Map<String, Object>> getByQuery(String text, QueryFilterDto queryFilterDto) {
         List<Contact> contacts = contactRepository.findByQueryParam(text);
-        for (Contact contact : contacts) {
-            queryContactDtos.add(convertToQueryContactDto(contact));
-        }
-        return queryContactDtos;
+        List<String> unmatchedFieldsName = contacts.get(0).getUnmatchedFieldsName(queryFilterDto.getFields());
+
+        return readJsonMapping(contacts, unmatchedFieldsName);
     }
 
-    @Override
-    public List<QueryContactDto> getByField(ContactDto contactDto) {
-        List<QueryContactDto> queryContactDtos = new ArrayList<>();
-        Example<Contact> exampleContact = Example.of(convertToContact(contactDto));
-        List<Contact> contacts = contactRepository.findAll(exampleContact);
-        for (Contact contact : contacts) {
-            queryContactDtos.add(convertToQueryContactDto(contact));
+    private List<Map<String, Object>> readJsonMapping(List<Contact> contacts, List<String> unmatchedFieldsName) {
+        List<Map<String, Object>> jsonContacts = new ArrayList<>();
+        String[] ignorableFieldNames = unmatchedFieldsName.toArray(new String[0]);
+
+        FilterProvider filters = new SimpleFilterProvider()
+                .addFilter("QueryFilter", SimpleBeanPropertyFilter.serializeAllExcept(ignorableFieldNames));
+
+        final var objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        ObjectWriter writer = objectMapper.writer(filters);
+        try {
+            for (Contact contact : contacts) {
+                String json = writer.writeValueAsString(contact);
+
+                Map<String, Object> jsonMapping = new ObjectMapper().readValue(json, HashMap.class);
+
+                jsonContacts.add(jsonMapping);
+            }
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
-        return queryContactDtos;
+        return jsonContacts;
     }
 
     @Override
@@ -115,8 +134,10 @@ public class ContactServiceImpl implements ContactService {
         Contact contact = new Contact();
         contact.setName(dto.getName());
         contact.setContact(dto.getContact());
-        Optional<Professional> optional = professionalRepository.findById(dto.getProfessionalId());
-        optional.ifPresent(contact::setProfessional);
+        if (dto.getProfessionalId() != null) {
+            Optional<Professional> optional = professionalRepository.findById(dto.getProfessionalId());
+            optional.ifPresent(contact::setProfessional);
+        }
         return contact;
     }
 }

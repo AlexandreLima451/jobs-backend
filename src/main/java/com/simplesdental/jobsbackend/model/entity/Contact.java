@@ -1,12 +1,20 @@
 package com.simplesdental.jobsbackend.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.simplesdental.jobsbackend.model.dto.DynamicQueryFilter;
+
 import javax.persistence.*;
+import java.util.Objects;
+
+import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
-public class Contact {
+@JsonFilter("QueryFilter")
+public class Contact extends DynamicQueryFilter {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = IDENTITY)
     private Long id;
 
     private String name;
@@ -15,6 +23,7 @@ public class Contact {
 
     @ManyToOne
     @JoinColumn(name = "professional_id", nullable = false)
+    @JsonIgnore
     private Professional professional;
 
     public void setName(String name) {
@@ -43,5 +52,18 @@ public class Contact {
 
     public void setProfessional(Professional professional) {
         this.professional = professional;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Professional that = (Professional) o;
+        return id.equals(that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
