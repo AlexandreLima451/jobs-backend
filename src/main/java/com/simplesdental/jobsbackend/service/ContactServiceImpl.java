@@ -3,7 +3,6 @@ package com.simplesdental.jobsbackend.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.ser.BeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
@@ -16,11 +15,9 @@ import com.simplesdental.jobsbackend.model.entity.Professional;
 import com.simplesdental.jobsbackend.repository.ContactRepository;
 import com.simplesdental.jobsbackend.repository.ProfessionalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class ContactServiceImpl implements ContactService {
@@ -34,6 +31,9 @@ public class ContactServiceImpl implements ContactService {
     @Override
     public List<Map<String, Object>> getByQuery(String text, QueryFilterDto queryFilterDto) {
         List<Contact> contacts = contactRepository.findByQueryParam(text);
+        if(contacts.isEmpty())
+            return new ArrayList<>();
+
         List<String> unmatchedFieldsName = contacts.get(0).getUnmatchedFieldsName(queryFilterDto.getFields());
 
         return readJsonMapping(contacts, unmatchedFieldsName);

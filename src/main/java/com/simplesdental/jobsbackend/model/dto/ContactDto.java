@@ -2,7 +2,7 @@ package com.simplesdental.jobsbackend.model.dto;
 
 import javax.validation.constraints.NotNull;
 
-public class ContactDto extends DynamicQueryFilter {
+public class ContactDto {
 
     @NotNull
     private String name;

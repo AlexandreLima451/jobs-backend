@@ -1,11 +1,11 @@
-package com.simplesdental.jobsbackend.model.dto;
+package com.simplesdental.jobsbackend.model.utils;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public abstract class DynamicQueryFilter {
+public abstract class QueryFieldFilter {
 
     private List<Field> getAllFields(List<Field> fields, Class<?> type) {
         fields.addAll(Arrays.asList(type.getDeclaredFields()));

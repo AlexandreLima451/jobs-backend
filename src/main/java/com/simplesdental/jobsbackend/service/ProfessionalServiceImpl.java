@@ -13,10 +13,12 @@ import com.simplesdental.jobsbackend.model.dto.QueryFilterDto;
 import com.simplesdental.jobsbackend.model.dto.QueryProfessionalDto;
 import com.simplesdental.jobsbackend.model.entity.Contact;
 import com.simplesdental.jobsbackend.model.entity.Professional;
+import com.simplesdental.jobsbackend.repository.ContactRepository;
 import com.simplesdental.jobsbackend.repository.ProfessionalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -25,10 +27,16 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     @Autowired
     private ProfessionalRepository repository;
 
+    @Autowired
+    private ContactRepository contactRepository;
+
     @Override
     public List<Map<String, Object>> getByQuery(String text, QueryFilterDto queryFilterDto) {
 
         List<Professional> professionals = repository.findByQueryParam(text);
+        if(professionals.isEmpty())
+            return new ArrayList<>();
+
         List<String> unmatchedFieldsName = professionals.get(0).getUnmatchedFieldsName(queryFilterDto.getFields());
 
         return readJsonMapping(professionals, unmatchedFieldsName);
@@ -73,9 +81,23 @@ public class ProfessionalServiceImpl implements ProfessionalService {
         professional.setName(dto.getName());
         professional.setRole(dto.getRole());
         professional.setBirthday(dto.getBirthday());
+        professional.setCreateDateTime(LocalDateTime.now());
 
-        dto.getContacts().forEach(queryContactDto -> {professional.addContact(convertDtoToContact(queryContactDto));});
-        return convertToQueryProfessionalDto(repository.save(professional));
+        Professional professionalCreated = repository.save(professional);
+
+        dto.getContacts().forEach(queryContactDto -> {
+            Contact contactForProfessional = createContactForProfessional(professional, queryContactDto);
+            professionalCreated
+                .addContact(contactForProfessional);});
+        return convertToQueryProfessionalDto(repository.save(professionalCreated));
+    }
+
+    private Contact createContactForProfessional(Professional professional, QueryContactDto queryContactDto) {
+        Contact contact = new Contact();
+        contact.setName(queryContactDto.getName());
+        contact.setContact(queryContactDto.getContact());
+        contact.setProfessional(professional);
+        return contactRepository.save(contact);
     }
 
     @Override
@@ -90,7 +112,12 @@ public class ProfessionalServiceImpl implements ProfessionalService {
         professional.setRole(dto.getRole());
         professional.setBirthday(dto.getBirthday());
         dto.getContacts().forEach(queryContactDto -> {
-            Contact contact = convertDtoToContact(queryContactDto);
+            Contact contact;
+            if(queryContactDto.getId() != null) {
+                contact = convertDtoToContact(professional.getId(), queryContactDto);
+            } else {
+                contact = createContactForProfessional(professional, queryContactDto);
+            }
             professional.addContact(contact);
         });
 
@@ -111,12 +138,12 @@ public class ProfessionalServiceImpl implements ProfessionalService {
         return convertToQueryProfessionalDto(professional);
     }
 
-    private Contact convertDtoToContact (QueryContactDto dto) {
+    private Contact convertDtoToContact (Long professionalId, QueryContactDto dto) {
         Contact contact = new Contact();
         contact.setName(dto.getName());
         contact.setContact(dto.getContact());
 
-        Optional<Professional> optional = repository.findById(dto.getProfessionalId());
+        Optional<Professional> optional = repository.findById(professionalId);
         optional.ifPresent(contact::setProfessional);
         return contact;
     }
@@ -128,6 +155,20 @@ public class ProfessionalServiceImpl implements ProfessionalService {
         dto.setRole(professional.getRole());
         dto.setBirthday(professional.getBirthday());
         dto.setCreateDateTime(professional.getCreateDateTime());
+        for (Contact contact : professional.getContacts()) {
+            dto.addContact(convertToQueryContactDto(contact));
+        }
         return dto;
     }
+
+    private QueryContactDto convertToQueryContactDto(Contact contact) {
+        QueryContactDto queryContactDto = new QueryContactDto();
+        queryContactDto.setId(contact.getId());
+        queryContactDto.setName(contact.getName());
+        queryContactDto.setContact(contact.getContact());
+        queryContactDto.setProfessionalId(contact.getProfessional().getId());
+        return queryContactDto;
+    }
+
+
 }

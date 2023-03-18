@@ -1,20 +1,20 @@
 package com.simplesdental.jobsbackend.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.simplesdental.jobsbackend.model.dto.DynamicQueryFilter;
+import com.simplesdental.jobsbackend.model.utils.QueryFieldFilter;
 import com.simplesdental.jobsbackend.model.enums.Role;
 
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 @Entity
 @JsonFilter("QueryFilter")
-public class Professional extends DynamicQueryFilter {
+public class Professional extends QueryFieldFilter {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,7 +30,7 @@ public class Professional extends DynamicQueryFilter {
     private LocalDateTime createDateTime;
 
     @OneToMany(mappedBy = "professional", fetch = FetchType.EAGER)
-    private List<Contact> contacts;
+    private final List<Contact> contacts = new ArrayList<>();
 
     public Long getId() {
         return id;

@@ -1,11 +1,10 @@
 package com.simplesdental.jobsbackend.model.dto;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.simplesdental.jobsbackend.model.entity.Contact;
 import com.simplesdental.jobsbackend.model.enums.Role;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Collections.unmodifiableList;
@@ -21,7 +20,7 @@ public class ProfessionalDto {
     @NotNull
     private LocalDate birthday;
 
-    private List<QueryContactDto> contacts;
+    private final List<QueryContactDto> contacts = new ArrayList<>();
 
     public String getName() {
         return name;
