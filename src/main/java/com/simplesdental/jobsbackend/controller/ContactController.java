@@ -1,7 +1,5 @@
 package com.simplesdental.jobsbackend.controller;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.simplesdental.jobsbackend.model.dto.ContactDto;
 import com.simplesdental.jobsbackend.model.dto.QueryContactDto;
 import com.simplesdental.jobsbackend.model.dto.QueryFilterDto;
@@ -15,7 +13,6 @@ import javax.validation.Valid;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -26,15 +23,13 @@ public class ContactController {
     @Autowired
     private ContactService service;
 
-    private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
     private final String CONTACT_BASE_PATH = "/contacts";
 
     @GetMapping(value = CONTACT_BASE_PATH, produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> getByParam(@RequestParam(required = false) String text,
+    public ResponseEntity<List<QueryContactDto>> getByParam(@RequestParam(required = false) String text,
                                              @RequestBody(required = false) QueryFilterDto queryFilterDto) {
 
-        List<Map<String, Object>> queryContactDtos = new ArrayList<>();
+        List<QueryContactDto> queryContactDtos = new ArrayList<>();
         Optional<String> optionalText = Optional.ofNullable(text);
         if (optionalText.isPresent()) {
             queryContactDtos = service.getByQuery(text, queryFilterDto);
@@ -43,7 +38,7 @@ public class ContactController {
         if (queryContactDtos.isEmpty()) {
             return ResponseEntity.noContent().build();
         } else {
-            return ResponseEntity.ok(gson.toJson(queryContactDtos));
+            return ResponseEntity.ok(queryContactDtos);
         }
     }
 

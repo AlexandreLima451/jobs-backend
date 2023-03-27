@@ -1,12 +1,5 @@
 package com.simplesdental.jobsbackend.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.ser.FilterProvider;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.simplesdental.jobsbackend.model.dto.ContactDto;
 import com.simplesdental.jobsbackend.model.dto.QueryContactDto;
 import com.simplesdental.jobsbackend.model.dto.QueryFilterDto;
@@ -29,38 +22,23 @@ public class ContactServiceImpl implements ContactService {
     private ProfessionalRepository professionalRepository;
 
     @Override
-    public List<Map<String, Object>> getByQuery(String text, QueryFilterDto queryFilterDto) {
+    public List<QueryContactDto> getByQuery(String text, QueryFilterDto queryFilterDto) {
         List<Contact> contacts = contactRepository.findByQueryParam(text);
         if(contacts.isEmpty())
             return new ArrayList<>();
 
-        List<String> unmatchedFieldsName = contacts.get(0).getUnmatchedFieldsName(queryFilterDto.getFields());
-
-        return readJsonMapping(contacts, unmatchedFieldsName);
-    }
-
-    private List<Map<String, Object>> readJsonMapping(List<Contact> contacts, List<String> unmatchedFieldsName) {
-        List<Map<String, Object>> jsonContacts = new ArrayList<>();
-        String[] ignorableFieldNames = unmatchedFieldsName.toArray(new String[0]);
-
-        FilterProvider filters = new SimpleFilterProvider()
-                .addFilter("QueryFilter", SimpleBeanPropertyFilter.serializeAllExcept(ignorableFieldNames));
-
-        final var objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        ObjectWriter writer = objectMapper.writer(filters);
-        try {
-            for (Contact contact : contacts) {
-                String json = writer.writeValueAsString(contact);
-
-                Map<String, Object> jsonMapping = new ObjectMapper().readValue(json, HashMap.class);
-
-                jsonContacts.add(jsonMapping);
+        List<QueryContactDto> contactDtoList = new ArrayList<>();
+        contacts.forEach(contact -> {
+            try {
+                QueryContactDto dto = convertToQueryContactDto(contact);
+                dto.filterByFields(queryFilterDto);
+                contactDtoList.add(dto);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
             }
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        return jsonContacts;
+        });
+
+        return contactDtoList;
     }
 
     @Override
@@ -130,14 +108,4 @@ public class ContactServiceImpl implements ContactService {
         return queryContactDto;
     }
 
-    private Contact convertToContact(ContactDto dto) {
-        Contact contact = new Contact();
-        contact.setName(dto.getName());
-        contact.setContact(dto.getContact());
-        if (dto.getProfessionalId() != null) {
-            Optional<Professional> optional = professionalRepository.findById(dto.getProfessionalId());
-            optional.ifPresent(contact::setProfessional);
-        }
-        return contact;
-    }
 }

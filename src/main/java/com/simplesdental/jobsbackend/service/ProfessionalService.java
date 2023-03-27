@@ -7,7 +7,7 @@ import java.util.Map;
 
 public interface ProfessionalService {
 
-    List<Map<String, Object>> getByQuery(String text, QueryFilterDto queryFilterDto);
+    List<QueryProfessionalDto> getByQuery(String text, QueryFilterDto queryFilterDto);
     QueryProfessionalDto getById(Long id);
     QueryProfessionalDto create(ProfessionalDto dto);
     QueryProfessionalDto update(Long id, ProfessionalDto dto);

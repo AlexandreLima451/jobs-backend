@@ -1,7 +1,11 @@
 package com.simplesdental.jobsbackend.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
+@JsonInclude(NON_NULL)
 public class QueryContactDto extends ContactDto {
 
     private Long id;

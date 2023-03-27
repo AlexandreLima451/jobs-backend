@@ -1,7 +1,5 @@
 package com.simplesdental.jobsbackend.controller;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.simplesdental.jobsbackend.model.dto.*;
 import com.simplesdental.jobsbackend.service.ProfessionalService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -23,15 +20,13 @@ public class ProfessionalController {
     @Autowired
     private ProfessionalService service;
 
-    private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
     private final String PROFESSIONAL_BASE_PATH = "/professionals";
 
     @GetMapping(value = PROFESSIONAL_BASE_PATH, produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> getByParam(@RequestParam(required = false) String text,
+    public ResponseEntity<List<QueryProfessionalDto>> getByParam(@RequestParam(required = false) String text,
                                              @RequestBody(required = false) QueryFilterDto queryFilterDto) {
 
-        List<Map<String, Object>> queryProfessionalsDto = new ArrayList<>();
+        List<QueryProfessionalDto> queryProfessionalsDto = new ArrayList<>();
         Optional<String> optionalText = Optional.ofNullable(text);
         if (optionalText.isPresent()) {
             queryProfessionalsDto = service.getByQuery(text, queryFilterDto);
@@ -40,7 +35,7 @@ public class ProfessionalController {
         if (queryProfessionalsDto.isEmpty()) {
             return ResponseEntity.noContent().build();
         } else {
-            return ResponseEntity.ok(gson.toJson(queryProfessionalsDto));
+            return ResponseEntity.ok(queryProfessionalsDto);
         }
     }
 

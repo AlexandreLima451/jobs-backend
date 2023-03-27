@@ -1,8 +1,6 @@
 package com.simplesdental.jobsbackend.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.simplesdental.jobsbackend.model.utils.QueryFieldFilter;
 
 import javax.persistence.*;
 import java.util.Objects;
@@ -10,8 +8,7 @@ import java.util.Objects;
 import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
-@JsonFilter("QueryFilter")
-public class Contact extends QueryFieldFilter {
+public class Contact {
 
     @Id
     @GeneratedValue(strategy = IDENTITY)

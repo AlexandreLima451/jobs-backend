@@ -1,8 +1,10 @@
 package com.simplesdental.jobsbackend.model.dto;
 
+import com.simplesdental.jobsbackend.model.utils.DtoFieldFilter;
+
 import javax.validation.constraints.NotNull;
 
-public class ContactDto {
+public class ContactDto extends DtoFieldFilter {
 
     @NotNull
     private String name;

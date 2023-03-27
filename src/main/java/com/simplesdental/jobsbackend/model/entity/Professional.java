@@ -1,7 +1,5 @@
 package com.simplesdental.jobsbackend.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-import com.simplesdental.jobsbackend.model.utils.QueryFieldFilter;
 import com.simplesdental.jobsbackend.model.enums.Role;
 
 import javax.persistence.*;
@@ -12,24 +10,28 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import static javax.persistence.CascadeType.ALL;
+import static javax.persistence.EnumType.STRING;
+import static javax.persistence.FetchType.EAGER;
+import static javax.persistence.GenerationType.IDENTITY;
+
 @Entity
-@JsonFilter("QueryFilter")
-public class Professional extends QueryFieldFilter {
+public class Professional {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = IDENTITY)
     private Long id;
 
     private String name;
 
-    @Enumerated(value = EnumType.STRING)
+    @Enumerated(value = STRING)
     private Role role;
 
     private LocalDate birthday;
 
     private LocalDateTime createDateTime;
 
-    @OneToMany(mappedBy = "professional", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "professional", fetch = EAGER, cascade = ALL)
     private final List<Contact> contacts = new ArrayList<>();
 
     public Long getId() {

@@ -1,18 +1,17 @@
 package com.simplesdental.jobsbackend.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.simplesdental.jobsbackend.model.entity.Contact;
-import com.simplesdental.jobsbackend.model.enums.Role;
-
-import javax.validation.constraints.NotNull;
-import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.LocalDateTime;
-import java.util.List;
+
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 public class QueryProfessionalDto extends ProfessionalDto {
 
+    @JsonInclude(NON_NULL)
     private Long id;
 
+    @JsonInclude(NON_NULL)
     private LocalDateTime createDateTime;
 
     public Long getId() {
